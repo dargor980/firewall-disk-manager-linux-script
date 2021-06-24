@@ -74,7 +74,7 @@ while true; do
 									echo ""
 									read -p "Ingrese la zona a la que desea agregar el servicio: " zone
 									read -p "Ingrese el serivicio a agregar: " service
-									firewall-cmd --permanent --zone=$zone --add-service=$service && echo "El servicio $service ha sido agregado a la zona $zone ."
+									firewall-cmd --permanent --zone=$zone --add-service=$service && echo "El servicio $service ha sido agregado a la zona $zone ." || echo "Error al agregar el servicio $service a la zona $zone ."
 									read -p "Presione Enter para volver..."
 									;;
 								2)
@@ -82,8 +82,8 @@ while true; do
 									echo "---------- Remover servicio de zona activa ---------"
 									echo ""
 									read -p "Ingrese la zona en la que desea remover el servicio: " zone
-									read -p "Ingrese el serivicio a remover: " service
-									firewall-cmd --permanent --zone=$zone --remove-service=$service && echo "El servicio $service ha sido removido de la zona $zone ."
+									read -p "Ingrese el servicio a remover: " service
+									firewall-cmd --permanent --zone=$zone --remove-service=$service && echo "El servicio $service ha sido removido de la zona $zone ." || echo "Error al remover el servicio $service de la zona $zone ."
 									read -p "Presione Enter para volver..."
 									;;
 								"q")
