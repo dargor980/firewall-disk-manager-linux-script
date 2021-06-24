@@ -105,7 +105,8 @@ while true; do
 						echo "---------- Crear reglas enriquecidas (rich rules) ----------"
 						echo ""
 						read -p "Ingrese la zona: " zone
-						firewall-cmd --zone=$zone --add-rich-rule && echo "Se agregó la regla enriquecida a la zona $zone" || echo "Error al agregar la regla enriquecida a la zona $zone"
+						read -p "Ingrese la regla (ejemplo: rule family=\"ipv4\" source address=\"192.168.0.102\" accept): " rule
+						firewall-cmd --zone=$zone --add-rich-rule="$rule" && echo "Se agregó la regla enriquecida a la zona $zone" || echo "Error al agregar la regla enriquecida a la zona $zone"
 						read -p "Presione Enter para volver..."
 						;;
 					5)
@@ -178,8 +179,47 @@ while true; do
 			done
 			;;
 		2)
-			clear
-			echo "---------- Gestionar Particiones de disco ----------"
+			task=""
+			while [[ ! $task =~ ^([qQ])$ ]];
+			do
+				clear
+				echo "---------- Gestionar Particiones de disco ----------"
+				echo ""
+				echo "1) Listar discos"
+				echo "2) Crear Partición de disco"
+				echo "3) Eliminar Partición de disco"
+				echo "Q) Volver al menú principal"
+				echo ""
+				echo "Seleccione una tarea: " task
+				case $task in
+					1)
+						clear
+						echo "---------- Listado de discos ----------"
+						echo ""
+						fdisk -l
+						read -p "Presione Enter para volver..."
+						;;
+					2)
+						clear
+						echo "---------- Crear Partición de disco ---------"
+						echo ""
+						read -p "Ingrese la unidad (ejemplo: /dev/sda): " unit
+						fdisk $unit
+						;;
+					"q")
+						clear
+						;;
+					"Q")
+						clear
+						;;
+					*)
+						echo "Opción inválida"
+						sleep 1
+						;;
+ 
+				esac			
+			done
+
 			;;
 		3)
 			clear
