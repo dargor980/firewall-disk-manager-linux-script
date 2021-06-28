@@ -73,7 +73,7 @@ while true; do
 									echo "---------- Agregar servicio a zona activa ----------"
 									echo ""
 									read -p "Ingrese la zona a la que desea agregar el servicio: " zone
-									read -p "Ingrese el serivicio a agregar: " service
+									read -p "Ingrese el servicio a agregar: " service
 									firewall-cmd --permanent --zone=$zone --add-service=$service && echo "El servicio $service ha sido agregado a la zona $zone ." || echo "Error al agregar el servicio $service a la zona $zone ."
 									read -p "Presione Enter para volver..."
 									;;
@@ -173,6 +173,7 @@ while true; do
 					*)
 						clear
 						echo "Opción inválida"
+						sleep 1
 						;;
 					
 				esac
@@ -187,10 +188,13 @@ while true; do
 				echo ""
 				echo "1) Listar discos"
 				echo "2) Crear Partición de disco"
-				echo "3) Eliminar Partición de disco"
+				echo "3) Redimensionar Particiones de disco"
+				echo "4) Eliminar Partición de disco"
+				echo "5) Montar partición"
+				echo "6) Desmontar partición"
 				echo "Q) Volver al menú principal"
 				echo ""
-				echo "Seleccione una tarea: " task
+				read -p"Seleccione una tarea: " task
 				case $task in
 					1)
 						clear
@@ -204,7 +208,80 @@ while true; do
 						echo "---------- Crear Partición de disco ---------"
 						echo ""
 						read -p "Ingrese la unidad (ejemplo: /dev/sda): " unit
-						fdisk $unit
+						echo "Seleccione tipo de partición: "
+						echo "1) Primaria"
+						echo "2) Extendida"
+						
+						read -p "Seleccione opción: " partType
+						read -p "Ingrese inicio de la partición: " start
+						read -p "Ingrese final de la partición: " end
+						parted $unit mkpart $partType $start $end && echo "La partición ha sido creada exitosamente." || echo "Error al crear la partición"
+						
+						;;
+					3)
+						$suboption=""
+						while [[ !$suboption =~ ^([Qq])$ ]];
+						do
+							clear
+							echo "---------- Redimensionar Particiones de disco ----------"
+							echo ""
+							echo "1) Extender Particiones"
+							echo "2) Reducir Particiones"
+							echo "Q) Volver"
+							echo ""
+							read -p "Seleccione una opción: " suboption
+							case $suboption in
+
+								1)
+									clear
+									echo "---------- Extender Particiones ----------"
+									echo ""
+									read -p "Ingrese la unidad de disco (ejemplo: /dev/sda): " unit
+									parted $unit print
+									read -p "Seleccione partición (ingrese el número de partición):" partition
+									read -p "Ingrese final de partición  (debe ser mayor al anterior): " end
+									parted $unit resizepart $partition $end && echo "La partición se extendió exitosamente" || echo "Error en extender partición"
+									read -p "Presione Enter para volver..."
+									;;
+								2)
+									clear
+									echo "---------- Reducir Particiones ----------"
+									echo ""
+									read -p "Ingrese la unidad de disco (ejemplo: /dev/sda): " unit
+									parted $unit print
+									read -p "Seleccione partición (ingrese el número de partición): " partition
+									read -p "Ingrese final de partición (debe ser menor al anterior): " end
+									parted $unit resizepart $partition $end && echo "La partición se redujo con éxito" || echo "Error al reducir la partición."
+									read -p "Presione Enter para volver..."
+									;;
+								"q")
+									clear
+									;;
+								"Q")
+									clear
+									;;
+								*)
+									clear
+									echo "Opción inválida"
+									sleep 1
+									;;
+							esac
+						done
+						;;
+					4)
+						clear
+						echo "---------- Eliminar Partición de disco ----------"
+						echo ""
+						;;
+					5)
+						clear
+						echo "---------- Montar Partición de disco ----------"
+						echo ""
+						;;
+					6)
+						clear
+						echo "---------- Desmontar Partición de disco ----------"
+						echo ""
 						;;
 					"q")
 						clear
@@ -223,7 +300,8 @@ while true; do
 			;;
 		3)
 			clear
-			echo "---------- Gestionar volumenes logicos ----------"
+			echo "---------- Gestionar volúmenes logicos ----------"
+			echo ""
 			;;
 		9)
 			clear
