@@ -414,7 +414,7 @@ while true; do
 				echo "2) Crear volumen lógico"
 				echo "3) Listar volúmenes lógicos"
 				echo "4) Crear grupo de volúmenes lógicos"
-				echo "5) Listar grupo de volúmenes lógicos"
+				echo "5) Seguimiento de volúmenes lógicos"
 				echo "Q) Volver al menú principal"
 				echo ""
 				read -p "Seleccione una opción: " task
@@ -428,12 +428,15 @@ while true; do
 						;;
 					2)
 						clear
-						echo "---------- Crear volumen Lógico ----------"
+						echo "---------- Crear volumen Físico ----------"
 						echo ""
+						read -p "Ingrese el disco en donde creará el volumen físico (ejemplo: /dev/sda) : " device
+						pvcreate $device && echo "Se creó el volumen físico en $device " || echo "Error al crear volumen físico en $device"
+						read -p "Presione Enter para volver..."
 						;;
 					3)
 						clear
-						echo "--------- Listar volúmenes lógicos ----------"
+						echo "--------- Listar volúmenes físicos ----------"
 						echo ""
 						pvdisplay
 						read -p "Presione Enter para volver..."
@@ -442,11 +445,66 @@ while true; do
 						clear
 						echo "---------- Crear grupo de volúmenes lógicos ----------"
 						echo ""
+						read -p "Ingrese el disco donde se creará el grupo de volúmenes lógicos (ejemplo: /dev/sda) : " device
+						read -p "Ingrese el nombre del grupo de volúmenes lógicos: " group
+						if [[ $(vgcreate $group $device) -eq 0 ]];
+						then
+							read -p "Desea agregar más volúmenes físicos al grupo? [S/N]: " option
+							case $option in
+								"S")
+									read -p "Ingrese el nombre del volumen físico (ejemplo: /dev/sda3): " volume
+									vgextend $group $volume && echo "Se agregó el volumen físico  $volume al grupo de volúmenes $group" || echo "No se pudo agregar el volumen físico $volume al grupo de volúmenes $group"
+									read -p "Desea crear un volumen lógico en el grupo? [S/N]: " option
+									case $option in
+										"S")
+											clear
+											read -p "Ingrese el nombre del volumen lógico: " name
+											read -p "Ingrese el tamaño del volumen lógico (ejemplo: 2G): " size
+											lvcreate -L $size $group -n $name
+					
+											;;											
+										"s")
+											clear
+											;;
+										"N")
+											clear
+											;;
+										"n")
+											clear
+											;;
+										*) 
+											clear
+											echo "Opción inválida."
+											sleep 1
+											;;
+									esac
+									read -p "Presione Enter para volver..."
+									;;
+								"s")
+									read -p "Ingrese el nombre del volumen físico (ejemplo: /dev/sda3): " volume
+									vgextend $group $volume && echo "Se agregó el volumen físico  $volume al grupo de volúmenes $group" || echo "No se pudo agregar el volumen físico $volume al grupo de volúmenes $group"
+									read -p "Presione Enter para volver..."
+									;;
+								"N")
+									clear
+									;;
+								"n") 
+									clear
+									;;
+								*)
+									echo "Opción inválida."
+									sleep 1
+									;;
+							esac
+						fi
+						
 						;;
 					5)
 						clear
-						echo "---------- Listar grupo de volúmenes lógicos ----------"
+						echo "---------- Seguimiento de volúmenes lógicos ----------"
 						echo ""
+						lvdisplay
+						read -p "Presione Enter para volver..."
 						;;
 					"q")
 						clear
