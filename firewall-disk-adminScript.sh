@@ -188,10 +188,11 @@ while true; do
 				echo ""
 				echo "1) Listar discos"
 				echo "2) Crear Partición de disco"
-				echo "3) Redimensionar Particiones de disco"
-				echo "4) Eliminar Partición de disco"
-				echo "5) Montar partición"
-				echo "6) Desmontar partición"
+				echo "3) Crear tabla de particiones de disco"
+				echo "4) Redimensionar Particiones de disco"
+				echo "5) Eliminar Partición de disco"
+				echo "6) Montar partición"
+				echo "7) Desmontar partición"
 				echo "Q) Volver al menú principal"
 				echo ""
 				read -p"Seleccione una tarea: " task
@@ -213,14 +214,99 @@ while true; do
 						echo "2) Extendida"
 						
 						read -p "Seleccione opción: " partType
-						read -p "Ingrese inicio de la partición: " start
-						read -p "Ingrese final de la partición: " end
+						case $partType in
+							1)
+								echo "sistema de archivos: "
+								echo "1) ext4"
+								echo "2) fat32"
+								read -p "Seleccione opción: " filesystem
+								case $filesystem in
+									1)
+										read -p "Ingrese inicio de la partición: " start
+										read -p "Ingrese final de la partición: " end
+										parted $unit mkpart primary ext4 $start $end && echo "La partición ha sido creada exitosamente." || echo "Error al crear la partición"
+										read -p "Presione Enter para volver..."
+										;;
+				
+									2)
+										read -p "Ingrese inicio de la partición: " start
+										read -p "Ingrese final de la partición: " end
+										parted $unit mkpart primary fat32 $start $end && echo "La partición ha sido creada exitosamente." || echo "Error al crear la partición"
+										read -p "Presione Enter para volver..."
+										;;
+									
+									*)
+										echo "Opción inválida"
+										sleep 1
+										clear
+										;;
+								esac 
+		
+								
+								;;
+							2)
+								read -p "Ingrese inicio de la partición: " start
+								read -p "Ingrese final de la partición: " end
+								parted $unit extended $start $end && echo "La partición ha sido creada exitosamente." || echo "Error al crear la partición"
+								;;
+							*)
+								echo "Opción inválida"
+								sleep 1
+								clear
+								;;
+						esac 
+
 						parted $unit mkpart $partType $start $end && echo "La partición ha sido creada exitosamente." || echo "Error al crear la partición"
 						
 						;;
 					3)
-						$suboption=""
-						while [[ !$suboption =~ ^([Qq])$ ]];
+						suboption=""
+						while [[ ! $suboption =~ ^([qQ])$ ]];
+						do	
+							clear					
+							echo "---------- Crear tabla de particiones de disco ----------"
+							echo ""
+							echo "1) Crear tabla GPT"
+							echo "2) Crear tabla MBR"
+							echo "Q) Volver"
+							echo ""
+							read -p "Selecciona una opción: " suboption
+							case $suboption in
+								1)
+									clear
+									echo "---------- Crear tabla de particiones GPT ----------"
+									echo ""
+									fdisk -l 
+									read -p "Ingrese disco (ejemplo /dev/sda): " disk
+									parted $disk mklabel gpt && echo "Tabla de particiones GPT creada correctamente en $disk" || echo "No se pudo crear la tabla de particiones en $disk"
+									read -p "Presione Enter para volver... "
+									;;
+								2)
+									clear
+									echo "---------- Crear tabla de particiones MBR ----------"
+									echo ""
+									fdisk -l
+									read -p "Ingrese disco (ejemplo /dev/sda): " disk
+									parted $disk mklabel msdos && echo "Tabla de particiones MBR creada correctamente en $disk" || echo "No se pudo crear la tabla de particiones MBR en $disk"
+									read -p "Presione Enter para volver..."
+									;;
+								"q")
+									clear
+									;;
+								"Q")
+									clear
+									;;
+								*)
+									clear
+									echo "Opción inválida"
+									sleep 1
+									;;	
+							esac
+						done
+						;;
+					4)
+						suboption=""
+						while [[ ! $suboption =~ ^([qQ])$ ]];
 						do
 							clear
 							echo "---------- Redimensionar Particiones de disco ----------"
@@ -268,20 +354,39 @@ while true; do
 							esac
 						done
 						;;
-					4)
+					5)
 						clear
 						echo "---------- Eliminar Partición de disco ----------"
 						echo ""
-						;;
-					5)
-						clear
-						echo "---------- Montar Partición de disco ----------"
-						echo ""
+						read -p "Ingrese la unidad de disco (ejemplo: /dev/sda): " unit
+						parted $unit print
+						read -p "Ingrese el número de partición que desea eliminar: " partition
+						parted $unit rm $partition && echo "la partición $partition de la unidad $unit ha sido eliminada correctamente" || echo "No se ha podido eliminar la partición $partition del disco $unit "
+						read -p "Presione Enter para volver..."
 						;;
 					6)
 						clear
+						echo "---------- Montar Partición de disco ----------"
+						echo ""
+						read -p "Ingrese la unidad de disco (ejemplo: /dev/sda): " unit
+						parted $unit print
+						read -p "Ingrese el número de la partición que desea montar: " partition
+						if [[ $(mkdir /media/sdb$partition) -eq 0 ]];
+						then
+							echo "/dev/sdb$partition /media/sdb$partition ext4 auto, rw,users,unmask=000 0 0" >> /etc/fstab
+						mount $unit$partition && echo "se ha montado la partición $partition del disco $unit correctamente." || echo "No se ha podido montar la partición $partition del disco $unit"
+						fi
+						read -p "Presione Enter para Volver..."
+						;;
+					7)
+						clear
 						echo "---------- Desmontar Partición de disco ----------"
 						echo ""
+						read -p "Ingrese la unidad de disco (ejemplo: /dev/sda): " unit
+						parted $unit print
+						read -p "Ingrese el número de la partición que desea desmontar: " partition
+						umount $unit$partition && echo "Se ha desmontado la partición $partition del disco $unit correctamente." || echo " No se ha podido desmontar la partición $partition del disco $unit"
+						read -p "Presione Enter para volver..."
 						;;
 					"q")
 						clear
@@ -299,9 +404,66 @@ while true; do
 
 			;;
 		3)
-			clear
-			echo "---------- Gestionar volúmenes logicos ----------"
-			echo ""
+			task=""
+			while [[ ! $task =~ ^([qQ])$ ]];
+			do
+				clear
+				echo "---------- Gestionar volúmenes logicos ----------"
+				echo ""
+				echo "1) Escanear dispositivos"
+				echo "2) Crear volumen lógico"
+				echo "3) Listar volúmenes lógicos"
+				echo "4) Crear grupo de volúmenes lógicos"
+				echo "5) Listar grupo de volúmenes lógicos"
+				echo "Q) Volver al menú principal"
+				echo ""
+				read -p "Seleccione una opción: " task
+				case $task in
+ 					1)
+						clear
+						echo "---------- Escanear dispositivos ----------"
+						echo ""
+						lvmdiskscan
+						read -p "Presione Enter para volver... "
+						;;
+					2)
+						clear
+						echo "---------- Crear volumen Lógico ----------"
+						echo ""
+						;;
+					3)
+						clear
+						echo "--------- Listar volúmenes lógicos ----------"
+						echo ""
+						pvdisplay
+						read -p "Presione Enter para volver..."
+						;;
+					4)
+						clear
+						echo "---------- Crear grupo de volúmenes lógicos ----------"
+						echo ""
+						;;
+					5)
+						clear
+						echo "---------- Listar grupo de volúmenes lógicos ----------"
+						echo ""
+						;;
+					"q")
+						clear
+						;;
+					"Q")
+						clear
+						;;
+					*)
+						clear
+						echo "Opción inválida"
+						sleep 1
+						;;
+				esac
+			
+
+			done
+
 			;;
 		9)
 			clear
@@ -313,5 +475,4 @@ while true; do
 			sleep 1
 			;;
 	esac
-done
-		
+done	
