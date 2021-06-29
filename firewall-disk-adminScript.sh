@@ -361,8 +361,33 @@ while true; do
 						read -p "Ingrese la unidad de disco (ejemplo: /dev/sda): " unit
 						parted $unit print
 						read -p "Ingrese el número de partición que desea eliminar: " partition
-						parted $unit rm $partition && echo "la partición $partition de la unidad $unit ha sido eliminada correctamente" || echo "No se ha podido eliminar la partición $partition del disco $unit "
-						read -p "Presione Enter para volver..."
+						read -p "Advertencia: Acción destructiva. Está seguro que desea eliminar la partición? [S/N] " option
+						case $option in
+							"S")
+								clear
+								parted $unit rm $partition && echo "la partición $partition de la unidad $unit ha sido eliminada correctamente" || echo "No se ha podido eliminar la partición $partition del disco $unit "
+								read -p "Presione Enter para volver..."
+								;;
+							"s")
+								clear
+								parted $unit rm $partition && echo "la partición $partition de la unidad $unit ha sido eliminada correctamente" || echo "No se ha podido eliminar la partición $partition del disco $unit "
+								read -p "Presione Enter para volver..."
+								;;
+							"N")
+								clear
+								read -p "Presione Enter para volver..."
+								;;
+							"n")
+								clear
+								read -p "Presione Enter para volver..."
+								;;
+							*) 
+								clear
+								echo "Opción inválida."
+								sleep 1
+								;;
+						esac
+						
 						;;
 					6)
 						clear
@@ -415,6 +440,7 @@ while true; do
 				echo "3) Listar volúmenes lógicos"
 				echo "4) Crear grupo de volúmenes lógicos"
 				echo "5) Seguimiento de volúmenes lógicos"
+				echo "6) Eliminar volumen lógico"
 				echo "Q) Volver al menú principal"
 				echo ""
 				read -p "Seleccione una opción: " task
@@ -460,11 +486,26 @@ while true; do
 											clear
 											read -p "Ingrese el nombre del volumen lógico: " name
 											read -p "Ingrese el tamaño del volumen lógico (ejemplo: 2G): " size
-											lvcreate -L $size $group -n $name
+											lvcreate -L $size $group -n $name && echo "Se creó el volumen lógico $name en el grupo $group . Punto de montaje: /dev/$group/$name" || echo " No se pudo crear el volumen lógico $name en el grupo $group"
+											echo ""
+											echo "Montando volumen lógico..."
+											read -p "Ingrese el sistema de archivos del volumen (ejemplo: ext4) : " filesystem
+											mkfs.$filesystem /dev/$group/$name
+											mount /dev/$group/$name /home && echo "se ha montado el volumen /dev/$group/$name " || echo "Error al montar volumen /dev/$group/$volume"
+											read -p "Presione Enter para volver..."
 					
 											;;											
 										"s")
 											clear
+											read -p "Ingrese el nombre del volumen lógico: " name
+											read -p "Ingrese el tamaño del volumen lógico (ejemplo: 2G): " size
+											lvcreate -L $size $group -n $name && echo "Se creó el volumen lógico $name en el grupo $group . Punto de montaje: /dev/$group/$name" || echo " No se pudo crear el volumen lógico $name en el grupo $group"
+											echo ""
+											echo "Montando volumen lógico..."
+											read -p "Ingrese el sistema de archivos del volumen (ejemplo: ext4) : " filesystem
+											mkfs.$filesystem /dev/$group/$name
+											mount /dev/$group/$name /home && echo "se ha montado el volumen /dev/$group/$name " || echo "Error al montar volumen /dev/$group/$volume"
+											read -p "Presione Enter para volver..."
 											;;
 										"N")
 											clear
@@ -505,6 +546,42 @@ while true; do
 						echo ""
 						lvdisplay
 						read -p "Presione Enter para volver..."
+						;;
+					6)
+						clear
+						echo "---------- Eliminar volumen lógico ----------"
+						echo ""
+						lvs
+						lsblk
+						echo ""
+						read -p "Ingrese punto de montaje del volumen lógico (ejemplo: /home): " volume
+						umount $volume
+						read -p "Ingrese el nombre del grupo de volúmenes al que pertenece el volumen: " group
+						read -p "Ingrese el nombre del volumen a eliminar: " name
+						read -p "Advertencia: Acción destructiva. Está seguro de que quiere eliminar el volumen $group/$name ? [S/N] " option
+						case $option in
+							"S")
+								clear
+								lvremove $group/$name && echo "Se ha eliminado el volumen $name del grupo $group" || echo "No se ha podido eliminar el volumen $name del grupo $group"
+								read -p "Presione Enter para volver..."
+								;;
+							"s")
+								lvremove $group/$name && echo "Se ha eliminado el volumen $name del grupo $group" || echo "No se ha podido eliminar el volumen $name del grupo $group"
+								read -p "Presione Enter para volver..."
+								clear
+								;;
+							"n")
+								clear
+								;;
+							"N")
+								clear
+								;;
+							*) 
+								clear
+								echo "Opción inválida."
+								sleep 1
+								;;
+						esac
 						;;
 					"q")
 						clear
